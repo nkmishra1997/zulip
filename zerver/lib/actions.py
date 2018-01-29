@@ -195,6 +195,10 @@ def bot_owner_user_ids(user_profile: UserProfile) -> Set[int]:
 def realm_user_count(realm: Realm) -> int:
     return UserProfile.objects.filter(realm=realm, is_active=True, is_bot=False).count()
 
+def log_messages_read(user_profile: UserProfile, client: Client, count: int) -> None:
+    do_increment_logging_stat(user_profile, COUNT_STATS['messages_read_log:client:day'],
+                              client.id, timezone_now(), increment=count)
+
 def get_topic_history_for_stream(user_profile: UserProfile,
                                  recipient: Recipient,
                                  public_history: bool) -> List[Dict[str, Any]]:
@@ -3335,11 +3339,12 @@ def do_update_pointer(user_profile: UserProfile, client: Client,
         # Until we handle the new read counts in the Android app
         # natively, this is a shim that will mark as read any messages
         # up until the pointer move
-        UserMessage.objects.filter(user_profile=user_profile,
-                                   message__id__gt=prev_pointer,
-                                   message__id__lte=pointer,
-                                   flags=~UserMessage.flags.read)        \
-                           .update(flags=F('flags').bitor(UserMessage.flags.read))
+        count = UserMessage.objects.filter(user_profile=user_profile,
+                                           message__id__gt=prev_pointer,
+                                           message__id__lte=pointer,
+                                           flags=~UserMessage.flags.read)        \
+                                   .update(flags=F('flags').bitor(UserMessage.flags.read))
+        log_messages_read(user_profile, client, count)
 
     event = dict(type='pointer', pointer=pointer)
     send_event(event, [user_profile.id])
@@ -3367,6 +3372,7 @@ def do_mark_all_as_read(user_profile: UserProfile, client: Client) -> int:
     send_event(event, [user_profile.id])
 
     statsd.incr("mark_all_as_read", count)
+    log_messages_read(user_profile, client, count)
     return count
 
 def do_mark_stream_messages_as_read(user_profile: UserProfile,
@@ -3405,6 +3411,7 @@ def do_mark_stream_messages_as_read(user_profile: UserProfile,
     send_event(event, [user_profile.id])
 
     statsd.incr("mark_stream_as_read", count)
+    log_messages_read(user_profile, client, count)
     return count
 
 def do_update_message_flags(user_profile: UserProfile,
@@ -3436,6 +3443,8 @@ def do_update_message_flags(user_profile: UserProfile,
 
     if operation == 'add':
         count = msgs.update(flags=F('flags').bitor(flagattr))
+        if flag == 'read':
+            log_messages_read(user_profile, client, count)
     elif operation == 'remove':
         count = msgs.update(flags=F('flags').bitand(~flagattr))
     else:
