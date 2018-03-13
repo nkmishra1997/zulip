@@ -3405,6 +3405,7 @@ def do_mark_stream_messages_as_read(user_profile: UserProfile,
     return count
 
 def do_update_message_flags(user_profile: UserProfile,
+                            client: Client,
                             operation: Text,
                             flag: Text,
                             messages: Optional[Sequence[int]]) -> int:
