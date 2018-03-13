@@ -1973,7 +1973,8 @@ class EventsRegisterTest(ZulipTestCase):
         # Now remove the first user, to test the normal unsubscribe flow
         action = lambda: bulk_remove_subscriptions(
             [self.example_user('othello')],
-            [stream])
+            [stream],
+            get_client("website"))
         events = self.do_test(action,
                               include_subscribers=include_subscribers,
                               state_change_expected=include_subscribers,
@@ -1984,7 +1985,8 @@ class EventsRegisterTest(ZulipTestCase):
         # Now remove the second user, to test the 'vacate' event flow
         action = lambda: bulk_remove_subscriptions(
             [self.example_user('hamlet')],
-            [stream])
+            [stream],
+            get_client("website"))
         events = self.do_test(action,
                               include_subscribers=include_subscribers,
                               num_events=3)

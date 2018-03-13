@@ -40,7 +40,7 @@ from zerver.lib.test_runner import (
 
 from zerver.models import (
     get_display_recipient, Message, Realm, Recipient, Stream, Subscription,
-    DefaultStream, UserProfile, get_user_profile_by_id, active_user_ids,
+    DefaultStream, UserProfile, get_user_profile_by_id, active_user_ids, get_client,
     get_default_stream_groups, flush_per_request_caches, DefaultStreamGroup
 )
 
@@ -1957,8 +1957,9 @@ class SubscriptionAPITest(ZulipTestCase):
         events = []  # type: List[Mapping[str, Any]]
         with tornado_redirected_to_list(events):
             bulk_remove_subscriptions(
-                users=[user1, user2],
-                streams=[stream1, stream2, private]
+                [user1, user2],
+                [stream1, stream2, private],
+                get_client("website")
             )
 
         peer_events = [e for e in events

@@ -32,7 +32,7 @@ from zerver.lib.test_helpers import (
 
 from zerver.models import (
     get_stream,
-    get_user,
+    get_client,
     get_user,
     get_realm,
     Client,
@@ -548,8 +548,9 @@ class ZulipTestCase(TestCase):
         return stream
 
     def unsubscribe(self, user_profile: UserProfile, stream_name: Text) -> None:
+        client = get_client("website")
         stream = get_stream(stream_name, user_profile.realm)
-        bulk_remove_subscriptions([user_profile], [stream])
+        bulk_remove_subscriptions([user_profile], [stream], client)
 
     # Subscribe to a stream by making an API request
     def common_subscribe_to_streams(self, email: Text, streams: Iterable[Text],
