@@ -148,3 +148,22 @@ class Command(BaseCommand):
         insert_fixture_data(stat, stream_data, StreamCount)
         FillState.objects.create(property=stat.property, end_time=last_end_time,
                                  state=FillState.DONE)
+
+        stat = COUNT_STATS['messages_read_log:client:day']
+        user_data = {
+            website.id: self.generate_fixture_data(stat, 2, 1, 1.5, .6, 8),
+            zephyr_mirror.id: self.generate_fixture_data(stat, 0, .3, 1.5, .6, 8)}
+        insert_fixture_data(stat, user_data, UserCount)
+        realm_data = {
+            website.id: self.generate_fixture_data(stat, 30, 20, 5, .6, 3),
+            old_desktop.id: self.generate_fixture_data(stat, 5, 3, 8, .6, 3),
+            android.id: self.generate_fixture_data(stat, 5, 5, 2, .6, 3),
+            iOS.id: self.generate_fixture_data(stat, 5, 5, 2, .6, 3),
+            react_native.id: self.generate_fixture_data(stat, 5, 5, 10, .6, 3),
+            API.id: self.generate_fixture_data(stat, 5, 5, 5, .6, 3),
+            zephyr_mirror.id: self.generate_fixture_data(stat, 1, 1, 3, .6, 3),
+            unused.id: self.generate_fixture_data(stat, 0, 0, 0, 0, 0),
+            long_webhook.id: self.generate_fixture_data(stat, 5, 5, 2, .6, 3)}
+        insert_fixture_data(stat, realm_data, RealmCount)
+        FillState.objects.create(property=stat.property, end_time=last_end_time,
+                                 state=FillState.DONE)

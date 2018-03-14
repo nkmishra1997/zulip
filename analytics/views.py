@@ -75,6 +75,13 @@ def get_chart_data(request: HttpRequest, user_profile: UserProfile, chart_name: 
         subgroup_to_label = {str(id): name for id, name in Client.objects.values_list('id', 'name')}
         labels_sort_function = sort_client_labels
         include_empty_subgroups = False
+    elif chart_name == 'messages_read_by_client':
+        stat = COUNT_STATS['messages_read_log:client:day']
+        tables = [RealmCount, UserCount]
+        # Note that the labels are further re-written by client_label_map
+        subgroup_to_label = {str(id): name for id, name in Client.objects.values_list('id', 'name')}
+        labels_sort_function = sort_client_labels
+        include_empty_subgroups = False
     else:
         raise JsonableError(_("Unknown chart name: %s") % (chart_name,))
 
@@ -195,7 +202,8 @@ def get_time_series_by_subgroup(stat: CountStat,
         if (subgroup in value_dicts) or include_empty_subgroups:
             value_arrays[label] = [value_dicts[subgroup][end_time] for end_time in end_times]
 
-    if stat == COUNT_STATS['messages_sent:client:day']:
+    if stat == COUNT_STATS['messages_sent:client:day'] \
+       or stat == COUNT_STATS['messages_read_log:client:day']:
         # HACK: We rewrite these arrays to collapse the Client objects
         # with similar names into a single sum, and generally give
         # them better names
